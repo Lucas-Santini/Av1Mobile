@@ -1,59 +1,47 @@
-
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet} from 'react-native';
+import { View, TextInput, Button, Text, StyleSheet } from 'react-native';
 import axios from 'axios';
 
+const App = () => {
+  const [drinkName, setDrinkName] = useState('');
+  const [ingredients, setIngredients] = useState([]);
 
-
-const App = ({ navigation }) => {
-  const [genre, setGenre] = useState('');
-
-  const handleSuggestMovie = () => {
-    axios.get('http://10.136.63.212:3000/movies')
-    .then(response => {
-      console.log(response.data);
-    })
-    .catch(error => {
-      console.error('Erro ao buscar filmes:', error);
-    });
-    
-
-    async function suggestMovieByGenre(genre) {
-        try {
-            const movies = await getMoviesByGenre(genre);
-            if (movies.length > 0) {
-                
-                const randomIndex = Math.floor(Math.random() * movies.length);
-                return movies[randomIndex];
-            } else {
-                return "Nenhum filme encontrado para o gênero fornecido.";
-            }
-        } catch (error) {
-            console.error('Erro ao sugerir filme:', error);
-            return "Ocorreu um erro ao sugerir um filme.";
+  const searchDrink = async () => {
+    try {
+      const response = await axios.get(`http://10.136.63.235:3000/drinks`);
+      if (response.data && response.data.drinks && response.data.drinks.length > 0) {
+        const drink = response.data.drinks[0];
+        const drinkIngredients = [];
+        for (let i = 1; i <= 15; i++) {
+          const ingredient = drink[`strIngredient${i}`];
+          if (ingredient) {
+            drinkIngredients.push(ingredient);
+          }
         }
+        setIngredients(drinkIngredients);
+      } else {
+        setIngredients([]);
+      }
+    } catch (error) {
+      console.error('Erro ao buscar drink:', error);
     }
-    
-   
-    suggestMovieByGenre('Action').then(movie => {
-        console.log('Filme sugerido:', movie);
-    }).catch(err => {
-        console.error('Erro:', err);
-    });
-    
-    alert(`Sugestão de filme do gênero ${genre}`);
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.label}>Gênero do Filme:</Text>
       <TextInput
         style={styles.input}
-        onChangeText={text => setGenre(text)}
-        value={genre}
-        placeholder="Digite o gênero do filme"
+        placeholder="Nome do drink"
+        value={drinkName}
+        onChangeText={setDrinkName}
       />
-      <Button title="Sugerir Filme" onPress={handleSuggestMovie} />
+      <Button title="Buscar" onPress={searchDrink} />
+      <View style={styles.ingredientsContainer}>
+        <Text style={styles.ingredientsTitle}>Ingredientes:</Text>
+        {ingredients.map((ingredient, index) => (
+          <Text key={index}>{ingredient}</Text>
+        ))}
+      </View>
     </View>
   );
 };
@@ -63,19 +51,23 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 20,
-  },
-  label: {
-    fontSize: 18,
-    marginBottom: 10,
+    padding: 20,
   },
   input: {
-    width: '100%',
-    height: 40,
-    borderColor: 'gray',
     borderWidth: 1,
-    paddingHorizontal: 10,
-    marginBottom: 20,
+    borderColor: '#ccc',
+    borderRadius: 5,
+    padding: 10,
+    marginBottom: 10,
+    width: '100%',
+  },
+  ingredientsContainer: {
+    marginTop: 20,
+    alignItems: 'center',
+  },
+  ingredientsTitle: {
+    fontWeight: 'bold',
+    marginBottom: 10,
   },
 });
 
